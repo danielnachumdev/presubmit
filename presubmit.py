@@ -88,7 +88,6 @@ def check_coding_style():
 
 def prepare_workspace():
     """this function makes sure every pre-requisites is met before running the tests"""
-    cm("clear")
     exit_early: bool = False
     if not IS_MAKE_INSTALLED:
         print("MAKE ERROR".center(PRINT_CENTER, "-"))
@@ -180,7 +179,9 @@ def excecute_tests(prepared_commands):
 
 
 if __name__ == '__main__':
+    cm("clear")
     verify_version()
+    print(f"running version {CURRENT_VERSION}")
     if is_in_wsl():
         prepare_workspace()
         check_coding_style()

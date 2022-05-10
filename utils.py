@@ -11,8 +11,52 @@ RANDOM = "sdfgjyuasdfgpiharpiguhaprughdakjhfbga"
 PASSED = "PASSED"
 FAILED = "FAILED"
 VALGRIND_ERROR = "VALGRIND ERROR"
-__VERSION_PATH = "https://raw.githubusercontent.com/danielnachumdev/presubmit/main/version"
-CURRENT_VERSION = 1
+__VERSION_URL = "https://raw.githubusercontent.com/danielnachumdev/presubmit/main/version"
+__LATEST_VERSION_ERROR = -1
+CURRENT_VERSION = 1.01
+
+
+def __is_installed(name: str) -> bool:
+    def is_valid_version(version):
+        for c in version:
+            if c not in "0123456789.":
+                return False
+        return True
+
+    tmp = f"{RANDOM}.txt"
+    cm(f"{name} --version >{tmp}")
+    output = f_conts(tmp)[0]  # EXAMPLE_OUTPUT = "valgrind-3.15.0\n"
+    d_file(tmp)
+    if output.count("\n") == 1 and output[-1:] == "\n":
+        output = output.strip('\n')
+    else:
+        return False
+    if name in ["valgrind", "make", "gcc"]:
+        if name == "valgrind":
+            version = output.split("-")[-1]
+        else:
+            version = output.split(" ")[-1]
+        if is_valid_version(version):
+            return True
+    else:
+        raise NotImplementedError(f"{name} is not supported")
+    return False
+
+
+def __get_latest_version() -> float:
+
+    def __get_current_folder() -> str:
+        return os.path.dirname(os.path.realpath(__file__))
+
+    try:
+        path = f"{__get_current_folder()}//{RANDOM}"
+        cm(f"curl -s {__VERSION_URL} > {path}")
+        version = float(f_conts(path)[0])
+        return version, None
+    except Exception as e:
+        return __LATEST_VERSION_ERROR, e
+    finally:
+        d_file(path)
 
 
 def cm(cm: str) -> int:
@@ -106,58 +150,13 @@ def print_array(array: list) -> None:
         print(i.strip())
 
 
-def __is_installed(name: str) -> bool:
-    def is_valid_version(version):
-        for c in version:
-            if c not in "0123456789.":
-                return False
-        return True
-
-    tmp = f"{RANDOM}.txt"
-    cm(f"{name} --version >{tmp}")
-    output = f_conts(tmp)[0]  # EXAMPLE_OUTPUT = "valgrind-3.15.0\n"
-    d_file(tmp)
-    if output.count("\n") == 1 and output[-1:] == "\n":
-        output = output.strip('\n')
-    else:
-        return False
-    if name in ["valgrind", "make", "gcc"]:
-        if name == "valgrind":
-            version = output.split("-")[-1]
-        else:
-            version = output.split(" ")[-1]
-        if is_valid_version(version):
-            return True
-    else:
-        raise NotImplementedError(f"{name} is not supported")
-    return False
-
-
-IS_VALGRIND_INSTALLED = __is_installed("valgrind") if is_in_wsl() else False
-IS_MAKE_INSTALLED = __is_installed("make") if is_in_wsl() else False
-IS_GCC_INSTALLED = __is_installed("gcc") if is_in_wsl() else False
-
-
 def is_valgrind_result_ok(vlg):
     return "ERROR SUMMARY: 0 errors from 0 contexts" in vlg[-1]
 
 
-def __get_latest_version() -> float:
-    try:
-        cm(f"curl -s {__VERSION_PATH} > {RANDOM}")
-        version = float(f_conts(RANDOM)[0])
-        d_file(RANDOM)
-        return version
-    except Exception:
-        return -1
-
-
-LATEST_VERSION = __get_latest_version()
-
-
 def verify_version():
-    if LATEST_VERSION == -1:
-        print("Could not get the latest version")
+    if LATEST_VERSION == __LATEST_VERSION_ERROR:
+        print(f"VERSION CHECK ERROR: {__LATEST_VERSION_ERROR}")
         return
 
     if CURRENT_VERSION < LATEST_VERSION:
@@ -166,3 +165,9 @@ def verify_version():
             f"Your version is {CURRENT_VERSION} and the latest version is {LATEST_VERSION}")
         print("Please update to the latest version")
         return
+
+
+IS_VALGRIND_INSTALLED = __is_installed("valgrind") if is_in_wsl() else False
+IS_MAKE_INSTALLED = __is_installed("make") if is_in_wsl() else False
+IS_GCC_INSTALLED = __is_installed("gcc") if is_in_wsl() else False
+LATEST_VERSION, __LATEST_VERSION_ERROR = __get_latest_version()
