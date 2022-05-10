@@ -3,6 +3,7 @@ from platform import uname
 import os
 import filecmp
 
+PRINT_CENTER = 80
 TNI = 0  # Test number index
 TTI = 1  # test target index
 TCI = 2  # test command index
@@ -10,6 +11,8 @@ RANDOM = "sdfgjyuasdfgpiharpiguhaprughdakjhfbga"
 PASSED = "PASSED"
 FAILED = "FAILED"
 VALGRIND_ERROR = "VALGRIND ERROR"
+__VERSION_PATH = "https://raw.githubusercontent.com/danielnachumdev/presubmit/main/version"
+CURRENT_VERSION = 1
 
 
 def cm(cm: str) -> int:
@@ -28,7 +31,7 @@ def dir_files(path: str):
     '''
     res = []
     for f in os.listdir(path):
-        p = path+f
+        p = path + f
         if os.path.isfile(p):
             res.append(p)
     return res
@@ -95,7 +98,7 @@ def is_line_longer_than(line: str, length: int) -> bool:
 
 
 def is_in_wsl() -> bool:
-    return 'microsoft-standard' in uname().release
+    return 'Linux' == uname().system
 
 
 def print_array(array: list) -> None:
@@ -109,6 +112,7 @@ def __is_installed(name: str) -> bool:
             if c not in "0123456789.":
                 return False
         return True
+
     tmp = f"{RANDOM}.txt"
     cm(f"{name} --version >{tmp}")
     output = f_conts(tmp)[0]  # EXAMPLE_OUTPUT = "valgrind-3.15.0\n"
@@ -129,10 +133,36 @@ def __is_installed(name: str) -> bool:
     return False
 
 
-IS_VALGRIND_INSTALLED = __is_installed("valgrind")
-IS_MAKE_INSTALLED = __is_installed("make")
-IS_GCC_INSTALLED = __is_installed("gcc")
+IS_VALGRIND_INSTALLED = __is_installed("valgrind") if is_in_wsl() else False
+IS_MAKE_INSTALLED = __is_installed("make") if is_in_wsl() else False
+IS_GCC_INSTALLED = __is_installed("gcc") if is_in_wsl() else False
 
 
 def is_valgrind_result_ok(vlg):
     return "ERROR SUMMARY: 0 errors from 0 contexts" in vlg[-1]
+
+
+def __get_latest_version() -> float:
+    try:
+        cm(f"curl -s {__VERSION_PATH} > {RANDOM}")
+        version = float(f_conts(RANDOM)[0])
+        d_file(RANDOM)
+        return version
+    except Exception:
+        return -1
+
+
+LATEST_VERSION = __get_latest_version()
+
+
+def verify_version():
+    if LATEST_VERSION == -1:
+        print("Could not get the latest version")
+        return
+
+    if CURRENT_VERSION < LATEST_VERSION:
+        print("VERSION WARNING".center(PRINT_CENTER, "-"))
+        print(
+            f"Your version is {CURRENT_VERSION} and the latest version is {LATEST_VERSION}")
+        print("Please update to the latest version")
+        return
