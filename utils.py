@@ -3,6 +3,10 @@ from platform import uname
 import os
 import filecmp
 
+DEFAULT_TESTS_PATH = "./extracts/io/"
+DEFAULT_ARG_TYPE = ".arg"
+DEFAULT_IN_TYPE = ".in"
+DEFUALT_OUT_TYPE = ".stdout"
 PRINT_CENTER = 80
 TNI = 0  # Test number index
 TTI = 1  # test target index
@@ -14,6 +18,41 @@ VALGRIND_ERROR = "VALGRIND ERROR"
 __VERSION_URL = "https://raw.githubusercontent.com/danielnachumdev/presubmit/main/version"
 __LATEST_VERSION_ERROR = -1
 CURRENT_VERSION = 1.01
+
+
+def proccess_command_line_arguments(args):
+    if(len(args) <= 0):
+        return DEFAULT_TESTS_PATH, DEFAULT_ARG_TYPE, DEFAULT_IN_TYPE, DEFUALT_OUT_TYPE
+    FLAGS = ["-t", "-a", "-i", "-o"]
+    FLAGS_EXPLANATIONS = ["the path to the folder that the tests are in", "the type of file that has the arguments",
+                          "the type of file for the input data", "the type of file for the expected output"]
+    exit_early: bool = False
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if "-" in arg:
+            if arg not in FLAGS:
+                print(f"UNKOWN FLAG: {arg}")
+                exit_early = True
+            else:
+                if i + 1 >= len(args) or args[i+1] in FLAGS:
+                    print(f"NO ARGUMENT FOR {arg}")
+                    exit_early = True
+                else:
+                    if arg == "-t":
+                        tests_path = args[i+1]
+                    elif arg == "-a":
+                        ARGUMENTS_FILE_PATH = args[i+1]
+                    elif arg == "-i":
+                        INPUT_FILE_PATH = args[i+1]
+                    elif arg == "-o":
+                        OUTPUT_FILE_PATH = args[i+1]
+                    i += 1
+        i += 1
+    if exit_early:
+        print("USAGE: python3 presubmit.py -t <tests_folder_path> -a <arguments_file_type> -i <input_file_type> -o <output_file_type>")
+        exit(0)
+    print("HEYYYYYYY")
 
 
 def __is_installed(name: str) -> bool:

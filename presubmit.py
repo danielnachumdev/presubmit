@@ -1,11 +1,10 @@
 # MADE BY DANIEL NACHUM @ https://github.com/danielnachumdev
 from utils import *
 import subprocess
+from sys import argv
+tests_path, arg_type, in_type, out_type = proccess_command_line_arguments(
+    argv[1:])
 
-RELATIVE_TESTS_FOLDER_PATH = "./extracts/io/"
-ARG = ".arg"
-IN = ".in"
-OUT = ".stdout"
 MAKE_TARGETS = ["all"]
 COMMAND_DICT = {
     "tweets": "./tweets_generator",
@@ -24,20 +23,20 @@ DELETE_TMP_FILES = True
 
 def prepare_commands():
     def build_command(name: str, extentions):
-        if ARG == extentions[0]:
-            contents = f_conts(RELATIVE_TESTS_FOLDER_PATH +
+        if arg_type == extentions[0]:
+            contents = f_conts(tests_path +
                                name + extentions[0])[0]
             exe, command = contents.split()[:1][0], " ".join(
                 contents.split()[1:])
             if (len(command.split()) >= 3):
                 s = command.split()
                 a, b, c = s[:2], s[2], s[3:]
-                b = RELATIVE_TESTS_FOLDER_PATH + b
+                b = tests_path + b
                 command = " ".join([" ".join(a), b, " ".join(c)])
             return exe, command
 
     all_files = list(filter(lambda f: "IO" in f_name(
-        f), dir_files(RELATIVE_TESTS_FOLDER_PATH)))
+        f), dir_files(tests_path)))
     organized_files: dict[str, list[str]] = {}
     for f in all_files:
         name = f_name(f).split(".")[0]
@@ -153,7 +152,7 @@ def excecute_tests(prepared_commands):
 
         if excecute(exe, command_data[TCI], output):
             usr_path = output
-            scl_path = RELATIVE_TESTS_FOLDER_PATH + name + OUT
+            scl_path = tests_path + name + out_type
 
             if not are_files_contents_the_same(usr_path, scl_path):
                 print(f"{FAILED}\n")
@@ -179,13 +178,14 @@ def excecute_tests(prepared_commands):
 
 
 if __name__ == '__main__':
-    cm("clear")
-    verify_version()
-    print(f"running version {CURRENT_VERSION}")
-    if is_in_wsl():
-        prepare_workspace()
-        check_coding_style()
-        excecute_tests(prepare_commands())
-    else:
-        print("WSL ERROR".center(PRINT_CENTER, "-"))
-        print("This script is only for WSL\n")
+    pass
+    # cm("clear")
+    # verify_version()
+    # print(f"running version {CURRENT_VERSION}")
+    # if is_in_wsl():
+    #     prepare_workspace()
+    #     check_coding_style()
+    #     excecute_tests(prepare_commands())
+    # else:
+    #     print("WSL ERROR".center(PRINT_CENTER, "-"))
+    #     print("This script is only for WSL\n")
